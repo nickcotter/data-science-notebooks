@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 
-<title>apple-health-extraction</title>
+<title>Apple Health Extraction Example</title>
 <style>
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -108,7 +108,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <header id="title-block-header" class="quarto-title-block default">
 <div class="quarto-title">
-<h1 class="title">apple-health-extraction</h1>
+<h1 class="title">Apple Health Extraction Example</h1>
 </div>
 
 
@@ -123,16 +123,119 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 </header>
 
-<section id="quarto" class="level2">
-<h2 class="anchored" data-anchor-id="quarto">Quarto</h2>
-<p>Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <a href="https://quarto.org" class="uri">https://quarto.org</a>.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="dv">1</span> <span class="sc">+</span> <span class="dv">1</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(XML)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(dplyr)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>
+Attaching package: 'dplyr'</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:stats':
+
+    filter, lag</code></pre>
+</div>
+<div class="cell-output cell-output-stderr">
+<pre><code>The following objects are masked from 'package:base':
+
+    intersect, setdiff, setequal, union</code></pre>
+</div>
+</div>
+<p>Prequisite: an Apple Health export file (export.zip) in the “data” directory.</p>
+<p>Unzip the export from Apple Health:</p>
+<div class="cell" data-hash="apple-health-extraction_cache/html/unnamed-chunk-2_b23ea45c58507b5f5816d49287557b5e">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unzip</span>(<span class="st">'data/export.zip'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>Parse the extracted files and create some data frames. Here I am indebted to John Goldin’s excellent <a href="https://www.r-bloggers.com/2020/02/apple-health-export-part-i/">blog post</a>. Note that it can take minutes to process this data.</p>
+<div class="cell" data-hash="apple-health-extraction_cache/html/unnamed-chunk-3_03cb09eb6c06ca2515ffebbefe97b336">
+<div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>health_xml <span class="ot">&lt;-</span> <span class="fu">xmlParse</span>(<span class="st">"apple_health_export/export.xml"</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>health_df <span class="ot">&lt;-</span> XML<span class="sc">:::</span><span class="fu">xmlAttrsToDataFrame</span>(health_xml[<span class="st">"//Record"</span>], <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>() <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">value =</span> <span class="fu">as.numeric</span>(value))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning: There was 1 warning in `mutate()`.
+ℹ In argument: `value = as.numeric(value)`.
+Caused by warning:
+! NAs introduced by coercion</code></pre>
+</div>
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>activity_df <span class="ot">&lt;-</span> XML<span class="sc">:::</span><span class="fu">xmlAttrsToDataFrame</span>(health_xml[<span class="st">"//ActivitySummary"</span>], <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>()</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>workout_df <span class="ot">&lt;-</span> XML<span class="sc">:::</span><span class="fu">xmlAttrsToDataFrame</span>(health_xml[<span class="st">"//Workout"</span>], <span class="at">stringsAsFactors =</span> <span class="cn">FALSE</span>) <span class="sc">%&gt;%</span></span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>as_tibble</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>clinical_df <span class="ot">&lt;-</span> XML<span class="sc">:::</span><span class="fu">xmlAttrsToDataFrame</span>(health_xml[<span class="st">"//ClinicalRecord"</span>]) <span class="sc">%&gt;%</span></span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a><span class="fu">as_tibble</span>()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in combineNamedVectors(lapply(doc, xmlAttrs), attrs, omit, ...): no
+elements to combine across records</code></pre>
+</div>
+</div>
+<p>The health_df is of most interest for my needs. The “sourceName” column shows where the data came from:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">unique</span>(health_df<span class="sc">$</span>sourceName)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>[1] 2</code></pre>
+<pre><code> [1] "Health"                 "WaterMinder"            "My Water"              
+ [4] "Lifesum"                "Shortcuts"              "Nicholas’s Apple&nbsp;Watch"
+ [7] ""                       "Blood Oxygen"           "Nicholas’s iPhone"     
+[10] "Strava"                 "Seven"                  "Workout"               
+[13] "8fit"                   "Intervals Pro"          "Zova"                  
+[16] "Peloton"                "Slopes"                 "Clock"                 
+[19] "Headspace"              "Forest"                </code></pre>
 </div>
 </div>
-</section>
+<p>The “type” column shows the specific type of measurement:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>health_df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(sourceName <span class="sc">==</span> <span class="st">'Health'</span>) <span class="sc">%&gt;%</span> <span class="fu">distinct</span>(type)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 6 × 1
+  type                                      
+  &lt;chr&gt;                                     
+1 HKQuantityTypeIdentifierBloodGlucose      
+2 HKQuantityTypeIdentifierHeight            
+3 HKQuantityTypeIdentifierBodyMass          
+4 HKQuantityTypeIdentifierOxygenSaturation  
+5 HKQuantityTypeIdentifierWaistCircumference
+6 HKDataTypeSleepDurationGoal               </code></pre>
+</div>
+</div>
+<p>Let’s extract weight and waist measurements along with their dates:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>health <span class="ot">&lt;-</span> health_df <span class="sc">%&gt;%</span> <span class="fu">filter</span>(sourceName <span class="sc">==</span> <span class="st">'Health'</span>) </span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>weight <span class="ot">&lt;-</span> health <span class="sc">%&gt;%</span> <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">'HKQuantityTypeIdentifierBodyMass'</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(creationDate))</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>waist <span class="ot">&lt;-</span> health <span class="sc">%&gt;%</span> <span class="fu">filter</span>(type <span class="sc">==</span> <span class="st">'HKQuantityTypeIdentifierWaistCircumference'</span>) <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">date =</span> <span class="fu">as.Date</span>(creationDate))</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>weight</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 22 × 10
+   type    sourc…¹ sourc…² unit  creat…³ start…⁴ endDate value device date      
+   &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt; &lt;chr&gt;   &lt;chr&gt;   &lt;chr&gt;   &lt;dbl&gt; &lt;chr&gt;  &lt;date&gt;    
+ 1 HKQuan… Health  10.2.1  kg    2017-0… 2017-0… 2017-0…  79   &lt;NA&gt;   2017-02-28
+ 2 HKQuan… Health  11.0.3  kg    2017-1… 2017-1… 2017-1…  92.4 &lt;NA&gt;   2017-10-31
+ 3 HKQuan… Health  11.1.2  kg    2017-1… 2017-1… 2017-1…  94.6 &lt;NA&gt;   2017-11-26
+ 4 HKQuan… Health  12.0.1  kg    2018-1… 2018-1… 2018-1…  91.9 &lt;NA&gt;   2018-11-03
+ 5 HKQuan… Health  12.1    kg    2018-1… 2018-1… 2018-1…  94.5 &lt;NA&gt;   2018-12-25
+ 6 HKQuan… Health  12.1.2  kg    2019-0… 2019-0… 2019-0…  92.3 &lt;NA&gt;   2019-01-06
+ 7 HKQuan… Health  12.1.2  kg    2019-0… 2019-0… 2019-0…  95.4 &lt;NA&gt;   2019-01-20
+ 8 HKQuan… Health  12.1.2  kg    2019-0… 2019-0… 2019-0…  93.4 &lt;NA&gt;   2019-01-27
+ 9 HKQuan… Health  12.1.2  kg    2019-0… 2019-0… 2019-0…  95.5 &lt;NA&gt;   2019-02-03
+10 HKQuan… Health  12.1.2  kg    2019-0… 2019-0… 2019-0…  93.7 &lt;NA&gt;   2019-02-10
+# … with 12 more rows, and abbreviated variable names ¹​sourceName,
+#   ²​sourceVersion, ³​creationDate, ⁴​startDate</code></pre>
+</div>
+</div>
+<p>Let’s plot them:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(weight<span class="sc">$</span>date, weight<span class="sc">$</span>value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="apple-health-extraction_files/figure-html/unnamed-chunk-7-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(waist<span class="sc">$</span>date, waist<span class="sc">$</span>value)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="apple-health-extraction_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
 
 </main>
 <!-- /main column -->
