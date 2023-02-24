@@ -62,3 +62,12 @@ plot(weight$date, weight$value)
 ```{r}
 plot(waist$date, waist$value)
 ```
+
+BMI is not necessarily a useful figure, but it is easy to derive from the weight, given my height on 172cm. The formula for BMI is weight in kilograms divided by height in meters squared.
+
+So adding BMI over time:
+
+```{r}
+bmi <- weight %>% mutate(bmi = value/(1.72^2))
+plot(bmi$date, bmi$bmi)
+```

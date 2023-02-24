@@ -236,6 +236,15 @@ elements to combine across records</code></pre>
 <p><img src="apple-health-extraction_files/figure-html/unnamed-chunk-8-1.png" class="img-fluid" width="672"></p>
 </div>
 </div>
+<p>BMI is not necessarily a useful figure, but it is easy to derive from the weight, given my height on 172cm. The formula for BMI is weight in kilograms divided by height in meters squared.</p>
+<p>So adding BMI over time:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>bmi <span class="ot">&lt;-</span> weight <span class="sc">%&gt;%</span> <span class="fu">mutate</span>(<span class="at">bmi =</span> value<span class="sc">/</span>(<span class="fl">1.72</span><span class="sc">^</span><span class="dv">2</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(bmi<span class="sc">$</span>date, bmi<span class="sc">$</span>bmi)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output-display">
+<p><img src="apple-health-extraction_files/figure-html/unnamed-chunk-9-1.png" class="img-fluid" width="672"></p>
+</div>
+</div>
 
 </main>
 <!-- /main column -->
