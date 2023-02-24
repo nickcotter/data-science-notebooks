@@ -1,0 +1,64 @@
+---
+title: "Apple Health Extraction Example"
+---
+
+```{r}
+library(XML)
+library(dplyr)
+```
+
+Prequisite: an Apple Health export file (export.zip) in the "data" directory.
+
+Unzip the export from Apple Health:
+
+```{r cache=TRUE}
+unzip('data/export.zip')
+```
+
+Parse the extracted files and create some data frames. Here I am indebted to John Goldin's excellent [blog post](https://www.r-bloggers.com/2020/02/apple-health-export-part-i/). Note that it can take minutes to process this data.
+
+```{r cache=TRUE}
+health_xml <- xmlParse("apple_health_export/export.xml")
+health_df <- XML:::xmlAttrsToDataFrame(health_xml["//Record"], stringsAsFactors = FALSE) %>%
+as_tibble() %>% mutate(value = as.numeric(value))
+activity_df <- XML:::xmlAttrsToDataFrame(health_xml["//ActivitySummary"], stringsAsFactors = FALSE) %>%
+as_tibble()
+workout_df <- XML:::xmlAttrsToDataFrame(health_xml["//Workout"], stringsAsFactors = FALSE) %>%
+as_tibble
+clinical_df <- XML:::xmlAttrsToDataFrame(health_xml["//ClinicalRecord"]) %>%
+as_tibble()
+```
+
+The health_df is of most interest for my needs. The "sourceName" column shows where the data came from:
+
+```{r}
+unique(health_df$sourceName)
+```
+
+The "type" column shows the specific type of measurement:
+
+```{r}
+health_df %>% filter(sourceName == 'Health') %>% distinct(type)
+```
+
+Let's extract weight and waist measurements along with their dates:
+
+```{r}
+health <- health_df %>% filter(sourceName == 'Health') 
+
+weight <- health %>% filter(type == 'HKQuantityTypeIdentifierBodyMass') %>% mutate(date = as.Date(creationDate))
+
+waist <- health %>% filter(type == 'HKQuantityTypeIdentifierWaistCircumference') %>% mutate(date = as.Date(creationDate))
+
+weight
+```
+
+Let's plot them:
+
+```{r}
+plot(weight$date, weight$value)
+```
+
+```{r}
+plot(waist$date, waist$value)
+```
