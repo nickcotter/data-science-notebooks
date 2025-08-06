@@ -1,0 +1,52 @@
+---
+title: "NextEnergy Solar Analysis"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# Load the necessary library
+library(ggplot2)
+
+# Create a data frame with historical data
+# NextEnergy Solar's fiscal year ends in March.
+# Gas prices are annual averages for the corresponding fiscal year.
+data <- data.frame(
+  Fiscal_Year_End = as.Date(c(
+    "2015-03-31", "2016-03-31", "2017-03-31", "2018-03-31", "2019-03-31", 
+    "2020-03-31", "2021-03-31", "2022-03-31", "2023-03-31", "2024-03-31"
+  )),
+  NextEnergy_Revenue_mGBP = c(16.70, 42.90, 62.48, 65.17, 65.04, -14.52, 56.58, 143.70, 66.03, 8.82),
+  UK_Gas_Price_p_therm = c(48, 38, 48, 50, 55, 35, 45, 150, 200, 100)
+)
+
+# Create a scatter plot of revenue vs. gas price
+ggplot(data, aes(x = UK_Gas_Price_p_therm, y = NextEnergy_Revenue_mGBP)) +
+  geom_point(color = "blue", size = 3) +
+  labs(
+    title = "NextEnergy Solar Revenue vs. UK Gas Price (2015–2024)",
+    x = "Average UK Gas Price (pence/therm)",
+    y = "NextEnergy Revenue (£m)"
+  ) +
+  theme_minimal()
+
+# Build the linear regression model
+model <- lm(NextEnergy_Revenue_mGBP ~ UK_Gas_Price_p_therm, data = data)
+
+# Display a summary of the model
+summary(model)
+
+# Add the regression line to the scatter plot
+ggplot(data, aes(x = UK_Gas_Price_p_therm, y = NextEnergy_Revenue_mGBP)) +
+  geom_point(color = "blue", size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(
+    title = "Linear Regression Model: NextEnergy Revenue vs. UK Gas Price",
+    x = "Average UK Gas Price (pence/therm)",
+    y = "NextEnergy Revenue (£m)"
+  ) +
+  theme_minimal()
+```
