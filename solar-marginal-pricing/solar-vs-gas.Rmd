@@ -50,3 +50,28 @@ ggplot(data, aes(x = UK_Gas_Price_p_therm, y = NextEnergy_Revenue_mGBP)) +
   ) +
   theme_minimal()
 ```
+
+
+```{r}
+# Shift gas prices forward by 1 year (to align last year's gas price with this year's revenue)
+data$Lagged_Gas_Price <- c(tail(data$UK_Gas_Price_p_therm, -1), NA)
+
+# Remove the last row (2024) since it has no known gas price for 2025
+lagged_data <- na.omit(data)
+
+# Fit the regression model using lagged gas prices
+lagged_model <- lm(NextEnergy_Revenue_mGBP ~ Lagged_Gas_Price, data = lagged_data)
+
+# Display model summary
+summary(lagged_model)
+
+ggplot(lagged_data, aes(x = Lagged_Gas_Price, y = NextEnergy_Revenue_mGBP)) +
+  geom_point(color = "blue", size = 3) +
+  geom_smooth(method = "lm", se = TRUE, color = "red") +
+  labs(
+    title = "NextEnergy Revenue vs. Previous Year's UK Gas Price",
+    x = "UK Gas Price (Previous FY, pence/therm)",
+    y = "NextEnergy Revenue (£m)"
+  ) +
+  theme_minimal()
+```
